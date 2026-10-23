@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f2a44">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Part Match">
+<title>Photo → Part Match</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="app.css?v=1.6.1">
+</head>
+<body>
+<header>
+  <div class="title">Photo → Part Match</div>
+  <button id="btnList" class="chip" title="Load the obsolete parts list">
+    <span id="listLabel">Load part list</span>
+  </button>
+</header>
+
+<nav class="tabs">
+  <button data-tab="scan" class="on">Scan</button>
+  <button data-tab="photos">Photos</button>
+  <button data-tab="history">History <span id="histCount" class="count"></span></button>
+  <button data-tab="help">?</button>
+</nav>
+
+<main>
+  <!-- ---------------------------------------------------------- SCAN -->
+  <section id="tab-scan" class="tab on">
+    <div id="needList" class="card hidden" style="border-left-color:#f9a825">
+      <div class="status" style="color:#b26a00">No part list yet</div>
+      <div>The list normally loads by itself when you are online. If this stays visible, tap the button and pick
+        <b>obsolete cl.xlsx</b> from <b>Files / OneDrive</b>.</div>
+      <div class="row"><button id="btnListBig" class="primary">Load part list…</button></div>
+    </div>
+    <div id="camWrap">
+      <video id="video" playsinline autoplay muted></video>
+      <div id="guide"><span>hold the job / part number inside the box</span></div>
+      <div id="scanStatus" class="pill">camera off</div>
+      <div id="zoomBar">
+        <button data-zoom="1" class="on">1×</button><button data-zoom="2">2×</button><button data-zoom="3">3×</button>
+      </div>
+    </div>
+    <div class="row">
+      <button id="btnCam" class="primary">Start live scan</button>
+      <button id="btnShot" disabled>Capture frame</button>
+      <button id="btnTorch" disabled title="Flashlight">🔦</button>
+      <button id="btnSound" title="Sound">🔔</button>
+    </div>
+    <div class="row">
+      <input id="manual" placeholder="or type a number, e.g. 294122P03" autocapitalize="characters" autocomplete="off" inputmode="text">
+      <button id="btnManual" class="primary">Check</button>
+    </div>
+    <div class="row">
+      <label for="author" class="hint" style="white-space:nowrap">Found by</label>
+      <input id="author" placeholder="your name — recorded with every find" autocomplete="name">
+    </div>
+    <p class="hint">Live scan keeps the camera inside this page. If the camera does not start, allow camera access for this site in the browser settings, or use the Photos tab.</p>
+    <div id="liveResult" class="card hidden"></div>
+  </section>
+
+  <!-- --------------------------------------------------------- PHOTOS -->
+  <section id="tab-photos" class="tab">
+    <p class="hint">Pick one or more pictures — from the camera roll, or from the <b>Files / OneDrive</b> app to use photos already on SharePoint.</p>
+    <div class="row">
+      <label class="primary btn">Choose photos<input id="filePhotos" type="file" accept="image/*" multiple hidden></label>
+      <label class="btn">Camera app (one photo)<input id="fileCamera" type="file" accept="image/*" capture="environment" hidden></label>
+    </div>
+    <div id="batchProgress" class="hint"></div>
+    <div id="batchResults"></div>
+  </section>
+
+  <!-- -------------------------------------------------------- HISTORY -->
+  <section id="tab-history" class="tab">
+    <div class="row wrap" id="histFilters"></div>
+    <div class="row">
+      <input id="histSearch" placeholder="filter by part / file">
+      <button id="btnExport">Export CSV</button>
+      <button id="btnShare">Share</button>
+      <button id="btnClear" class="danger">Clear</button>
+    </div>
+    <div id="histList"></div>
+  </section>
+
+  <!-- ----------------------------------------------------------- HELP -->
+  <section id="tab-help" class="tab">
+    <h3>How to use</h3>
+    <ol>
+      <li><b>Part list</b> loads automatically from the published copy whenever you open the app online (the chip at the top shows its date). To use a different workbook, tap the chip and pick an <i>.xlsx</i> from Files / OneDrive — that choice then sticks until you tap it again.</li>
+      <li><b>Scan</b>: <b>Start live scan</b> keeps the camera inside this page — hold the box over the <i>Job:</i> / part-number line. The verdict appears as soon as a number is read twice in a row; the screen edge lights up <span style="color:#2e7d32;font-weight:700">green</span> = on the list, <span style="color:#c62828;font-weight:700">red</span> = read but not on the list, <span style="color:#ef6c00;font-weight:700">orange</span> = possible match. Labels that are sideways or upside down are read too (it takes a second longer). Use <b>1× 2× 3×</b> to zoom. <b>Capture frame</b> freezes the picture, reads the whole frame and shows the result; tap <b>Resume</b> to continue scanning.</li>
+      <li><b>Type a number</b> in the box under the camera and tap <b>Check</b> when a label cannot be read — same verdict, sound and History entry (marked “manual”).</li>
+      <li><b>Photos</b>: run existing pictures (camera roll or SharePoint via the Files app) through the same check.</li>
+      <li><b>History</b>: every result with its thumbnail. <b>Export CSV</b> / <b>Share</b> to send the list to Teams or e-mail — same columns as the PC report.</li>
+    </ol>
+    <h3>What the colours mean</h3>
+    <ul id="legend"></ul>
+    <p class="hint">Sounds (🔔 to mute): rising <b>ding‑ding</b> = on the obsolete list · single <b>ding</b> = Sodecia number not on the list · two short <b>blips</b> = possible match, look at it · low <b>bonk</b> = a number was read but it is not a Sodecia part number. The phone also vibrates on a hit. No permission is needed, but an iPhone on <i>silent</i> mutes web audio and Android uses the media volume.</p>
+    <h3>Who found it</h3>
+    <p>Type your name in <b>Found by</b> under the camera once; it is saved on this phone and written into every History entry and the exported CSV (<code>found_by</code>).</p>
+    <h3>Privacy</h3>
+    <p>Text recognition and matching run inside this page on your phone. Pictures and the part list are not uploaded anywhere.</p>
+    <p class="hint">Engine mirrors <code>tools/retrieval/photo_part_match.py</code> · PaddleOCR PP-OCRv4 on ONNX Runtime Web · <span id="ver"></span></p>
+  </section>
+</main>
+
+<canvas id="work" hidden></canvas>
+<div id="toast" class="hidden"></div>
+<div id="verdictFx" class="hidden"><div class="ring"><div class="spin"></div></div><div class="tint"></div></div>
+
+<script src="vendor/xlsx.full.min.js"></script>
+<script type="module" src="app.js?v=1.6.1"></script>
+</body>
+</html>
